@@ -14,24 +14,26 @@ export function App() {
   }, [amount])
 
   return (
-    <main class="p-6 text-center">
-      <h1 class="text-4xl font-bold">Schraubenzähler</h1>
-      <p class="mb-6">Don't screw the counter, count the screws.</p>
-      {state === 'idle' && <Form />}
-      {state === 'counting' && (
-        <section class="grid gap-4">
-          <p class="text-7xl font-bold">
-            {count}
-            <span class="text-gray-400">/{amount}</span>
-          </p>
-          <button
-            onClick={() => setState('idle')}
-            class="bg-red-500 font-bold text-xl p-4 rounded-xl w-full"
-          >
-            Abbrechen
-          </button>
-        </section>
-      )}
+    <main class="p-6 text-center max-w-lg mx-auto mt-32 font-sans">
+      <section>
+        <h1 class="text-4xl font-bold">Schraubenzähler</h1>
+        <p class="mb-6">Don't screw the counter, count the screws.</p>
+        {state === 'idle' && <Form />}
+        {state === 'counting' && (
+          <section class="grid gap-4">
+            <p class="text-7xl font-bold">
+              {count}
+              <span class="text-gray-400">/{amount}</span>
+            </p>
+            <button
+              onClick={() => setState('idle')}
+              class="bg-red-500 font-bold text-xl p-4 rounded-xl w-full cursor-pointer"
+            >
+              Abbrechen
+            </button>
+          </section>
+        )}
+      </section>
     </main>
   )
 }
@@ -52,7 +54,7 @@ function Form() {
           class=" p-4 text-xl rounded-r-xl w-full"
         />
       </fieldset>
-      <button type="submit" class="bg-lime-500 font-bold text-xl p-4 rounded-xl w-full">
+      <button type="submit" class="bg-lime-500 font-bold text-xl p-4 rounded-xl w-full cursor-pointer">
         Zähler starten
       </button>
     </form>
