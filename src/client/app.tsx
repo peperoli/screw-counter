@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
 import './app.css'
-import mqtt from 'mqtt'
 
 export function App() {
   const [state, setState] = useState<'idle' | 'counting' | 'success'>('idle')
@@ -27,7 +26,10 @@ export function App() {
               <span class="text-gray-400">/{amount}</span>
             </p>
             <button
-              onClick={() => setState('idle')}
+              onClick={() => {
+                setState('idle')
+                window.location.href = '/'
+              }}
               class="bg-red-500 font-bold text-xl p-4 rounded-xl w-full cursor-pointer"
             >
               Abbrechen
@@ -40,50 +42,8 @@ export function App() {
 }
 
 function Form() {
-  async function onSubmit(event: Event) {
-    event.preventDefault()
-    const form = event.target as HTMLFormElement
-    const formData = new FormData(form)
-    const amount = formData.get('amount')
-
-    try {
-      if (!amount) {
-        throw new Error('Bitte eine Menge angeben')
-      }
-
-      const options = {
-        host: '761aa76a827b4185897045398392da71.s1.eu.hivemq.cloud',
-        port: 8883,
-        protocol: 'mqtts',
-        username: 'screw-counter-web',
-        password: '8p2v3Wn3JIu4',
-      } as const
-      const client = await mqtt.connectAsync(options)
-
-      client.on('connect', function () {
-        console.log('Connected')
-      })
-
-      client.on('error', function (error) {
-        console.log(error)
-        throw error
-      })
-
-      client.on('message', function (topic, message) {
-        console.log('Received message:', topic, message.toString())
-      })
-
-      client.subscribe('hello')
-
-      client.publish('hello', 'Hello from Preact App!')
-    } catch (error) {
-      console.error(error)
-      alert(error instanceof Error ? error.message : 'Unbekannter Fehler')
-    }
-  }
-
   return (
-    <form onSubmit={onSubmit} class="grid gap-4">
+    <form method="post" action="/api/start-counter" class="grid gap-4">
       <fieldset class="flex border rounded-xl items-center">
         <label htmlFor="amount" class="text-xl whitespace-nowrap px-4 text-gray-600">
           Menge:
