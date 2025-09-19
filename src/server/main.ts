@@ -1,14 +1,23 @@
 import express from 'express'
 import ViteExpress from 'vite-express'
-import mqtt from 'mqtt'
 import bodyParser from 'body-parser'
+import { mqttClient } from './mqttClient'
+import { Server as SocketIOServer } from 'socket.io'
+import http from 'http'
 
 const app = express()
+const server = http.createServer(app.listen(3000))
 app.use(bodyParser.urlencoded())
+const io = new SocketIOServer(server, {
+  cors: { origin: '*' }, // adjust for production
+})
 
 app.get('/hello', (_, res) => {
   res.send('Hello Vite + React + TypeScript!')
 })
+
+const client = mqttClient()
+const TOPIC = 'screwCounter_currentCount'
 
 app.post('/api/start-counter', (req, res) => {
   const amount = req.body?.amount as string | undefined
@@ -18,33 +27,7 @@ app.post('/api/start-counter', (req, res) => {
       throw new Error('Bitte eine Menge angeben')
     }
 
-    const options = {
-      host: '761aa76a827b4185897045398392da71.s1.eu.hivemq.cloud',
-      port: 8883,
-      protocol: 'mqtts',
-      username: 'screw-counter-web',
-      password: '8p2v3Wn3JIu4',
-    } as const
-
-    const client = mqtt.connect(options)
-
-    client.on('connect', function () {
-      console.log('Connected')
-    })
-
-    client.on('error', function (error) {
-      console.error(error)
-
-      throw error
-    })
-
-    client.on('message', function (topic, message) {
-      console.log('Received message:', topic, message.toString())
-    })
-
-    client.subscribe('hello')
-
-    client.publish('hello', amount)
+    client.publish('screwCounter_targetCount', amount)
 
     res.redirect(`/?amount=${amount}`)
   } catch (error) {
@@ -57,4 +40,28 @@ app.post('/api/start-counter', (req, res) => {
   }
 })
 
-ViteExpress.listen(app, 3000, () => console.log('Server is listening on port 3000...'))
+client.on('connect', () => {
+  client.subscribe(TOPIC, err => {
+    if (err) console.error('Subscribe error:', err)
+    else console.log(`Subscribed to ${TOPIC}`)
+  })
+})
+
+client.on('message', (topic, payload) => {
+  const msg = payload.toString() // usually a string or JSON
+  console.log(`${topic}: ${msg}`)
+
+  // Broadcast to all connected browsers
+  io.emit('mqtt-message', { topic, payload: msg })
+})
+
+// ---------- Socket.IO ----------
+io.on('connection', socket => {
+  console.log('Client connected', socket.id)
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected', socket.id)
+  })
+})
+
+ViteExpress.bind(app, server)

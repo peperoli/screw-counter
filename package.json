@@ -14,6 +14,7 @@
     "express": "^5.1.0",
     "mqtt": "^5.14.1",
     "preact": "^10.26.5",
+    "socket.io": "^4.8.1",
     "tailwindcss": "^4.1.12",
     "vite-express": "*"
   },
